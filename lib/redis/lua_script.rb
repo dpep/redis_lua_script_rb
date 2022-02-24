@@ -25,7 +25,7 @@ class Redis
     end
 
     def load(redis)
-      redis.script(:load, minify).tap do |sha|
+      unwrap_redis(redis).script(:load, minify).tap do |sha|
         unless sha == self.sha
           raise "unexpected script SHA: expected #{self.sha}, got #{sha}"
         end
@@ -33,8 +33,9 @@ class Redis
     end
 
     def loaded?(redis)
-      redis.script(:exists, sha)
+      unwrap_redis(redis).script(:exists, sha)
     end
+    alias_method :exists?, :loaded?
 
     def to_s
       source
@@ -46,6 +47,11 @@ class Redis
       # trim comments (whole line and partial)
       # and whitespace (prefix and empty lines)
       @minify ||= source.gsub(/^\s*--.*\n|\s*--.*|^\s*|^$\n/, "").chomp.freeze
+    end
+
+    # Redis::Namespace deprecated script commands, so use raw redis connection
+    def unwrap_redis(redis)
+      defined?(Redis::Namespace) && redis.is_a?(Redis::Namespace) ? redis.redis : redis
     end
   end
 end

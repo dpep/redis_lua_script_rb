@@ -48,6 +48,14 @@ describe Redis::LuaScript do
     end
   end
 
+  describe "#exists?" do
+    it 'works the same as .loaded?' do
+      expect(subject.exists?(redis)).to be false
+      subject.load(redis)
+      expect(subject.exists?(redis)).to be true
+    end
+  end
+
   describe "#to_s" do
     it { expect(subject.to_s).to be subject.source }
   end

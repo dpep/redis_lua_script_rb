@@ -1,4 +1,5 @@
 require "byebug"
+require "redis-namespace"
 require "rspec"
 require "simplecov"
 
