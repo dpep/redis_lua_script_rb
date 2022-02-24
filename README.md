@@ -1,6 +1,6 @@
 redis_lua_script
 ======
-Optimized evaluation of Redis Lua scripts through minification and [evalsha](https://redis.io/commands/EVALSHA).
+Optimize Redis Lua scripts through minification and [evalsha](https://redis.io/commands/EVALSHA).
 
 
 ```ruby
