@@ -1,7 +1,7 @@
 package_name = Dir.glob("*.gemspec")[0].split(".")[0]
-require "./lib/redis/lua_script/version"
+require_relative "lib/#{package_name}"
 
-package = Redis::LuaScript
+package = RedisLuaScript
 
 Gem::Specification.new do |s|
   s.name        = package_name
