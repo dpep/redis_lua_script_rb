@@ -7,21 +7,23 @@ describe RedisLuaScript do
   let(:redis) { Redis.new }
   let!(:script) { RedisLuaScript.new("return redis.call('PING')") }
 
-  it "prepends the Redis module" do
-    expect(Redis.ancestors).to include(RedisLuaScript::ImplicitRedis)
+  describe Redis.ancestors do
+    it "prepends the Redis module" do
+      is_expected.to include(RedisLuaScript::ImplicitRedis)
+    end
   end
 
   describe "Redis#eval" do
-    subject { redis.eval("return redis.call('PING')") }
+    subject { redis.eval(script.source) }
 
     it { is_expected.to eq "PONG" }
 
     it "instantiates a RedisLuaScript implicitly" do
-      expect(RedisLuaScript).to receive(:new).and_call_original
+      expect(RedisLuaScript).to receive(:new).with(script.source).and_call_original
     end
 
     it "calls evalsha implicitly" do
-      expect(redis).to receive(:evalsha)
+      expect(redis).to receive(:evalsha).with(script.sha)
     end
 
     context "when a RedisLuaScript is passed in" do
