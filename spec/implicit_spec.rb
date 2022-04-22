@@ -37,7 +37,6 @@ describe RedisLuaScript do
 
       it "it uses the RedisLuaScript methods" do
         expect(script).to receive(:sha).and_call_original
-        expect(script).to receive(:minify).twice.and_call_original
       end
     end
   end
@@ -49,6 +48,7 @@ describe RedisLuaScript do
 
     it "reuses the RedisLuaScript object" do
       expect(RedisLuaScript).not_to receive(:new)
+      expect(script).to receive(:sha).and_call_original
     end
 
     it "only calls evalsha once" do
