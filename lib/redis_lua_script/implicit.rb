@@ -1,4 +1,4 @@
-require "redis/lua_script"
+require "redis_lua_script"
 
 class RedisLuaScript
   module ImplicitRedis

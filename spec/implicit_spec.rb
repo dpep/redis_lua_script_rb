@@ -1,4 +1,4 @@
-require "redis/lua_script/implicit"
+require "redis_lua_script/implicit"
 
 describe RedisLuaScript do
   before { redis.script(:flush) }
