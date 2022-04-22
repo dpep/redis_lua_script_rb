@@ -1,5 +1,5 @@
-describe Redis::LuaScript do
-  subject { Redis::LuaScript.new("return redis.call('PING')") }
+describe RedisLuaScript do
+  subject { RedisLuaScript.new("return redis.call('PING')") }
 
   before { redis.redis.script(:flush) }
 

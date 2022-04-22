@@ -1,11 +1,11 @@
-describe Redis::LuaScript do
-  subject { Redis::LuaScript.new("return redis.call('PING')") }
+describe RedisLuaScript do
+  subject { RedisLuaScript.new("return redis.call('PING')") }
 
   before { redis.script(:flush) }
 
   let(:redis) { Redis.new }
 
-  it { is_expected.to be_a Redis::LuaScript }
+  it { is_expected.to be_a RedisLuaScript }
 
   describe "#eval" do
     def ping
@@ -61,7 +61,7 @@ describe Redis::LuaScript do
   end
 
   describe "#minify" do
-    subject { Redis::LuaScript.new(lua) }
+    subject { RedisLuaScript.new(lua) }
 
     shared_examples "minified lua" do
       it do

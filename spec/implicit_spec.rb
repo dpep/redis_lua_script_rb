@@ -5,7 +5,7 @@ describe RedisLuaScript do
   after { subject }
 
   let(:redis) { Redis.new }
-  let!(:script) { Redis::LuaScript.new("return redis.call('PING')") }
+  let!(:script) { RedisLuaScript.new("return redis.call('PING')") }
 
   it "prepends the Redis module" do
     expect(Redis.ancestors).to include(RedisLuaScript::ImplicitRedis)

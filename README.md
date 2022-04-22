@@ -7,7 +7,7 @@ Optimize Redis Lua scripts through minification and [evalsha](https://redis.io/c
 require "redis_lua_script"
 
 redis = Redis.new
-script = Redis::LuaScript.new("return redis.call('PING')")
+script = RedisLuaScript.new("return redis.call('PING')")
 
 script.eval(redis)
 ```
