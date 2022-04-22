@@ -1,4 +1,4 @@
-redis_lua_script
+RedisLuaScript
 ======
 ![Gem](https://img.shields.io/gem/dt/redis_lua_script?style=plastic)
 [![codecov](https://codecov.io/gh/dpep/redis_lua_script_rb/branch/main/graph/badge.svg)](https://codecov.io/gh/dpep/redis_lua_script_rb)
