@@ -1,9 +1,8 @@
 require "digest"
 require "redis"
+require "redis_lua_script/version"
 
 class RedisLuaScript
-  VERSION = "0.0.1"
-
   attr_reader :source
 
   def initialize(source)

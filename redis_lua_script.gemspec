@@ -1,5 +1,5 @@
 package_name = File.basename(__FILE__).split(".")[0]
-require_relative "lib/#{package_name}"
+require File.expand_path("lib/#{package_name}/version", __dir__)
 
 package = RedisLuaScript
 
