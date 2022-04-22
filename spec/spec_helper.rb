@@ -24,6 +24,14 @@ RSpec.configure do |config|
     # verify existence of stubbed methods
     mocks.verify_partial_doubles = true
   end
+
+  config.register_ordering :global do |examples|
+    last, other = examples.partition do |example|
+      example.metadata[:run_last]
+    end
+
+    other + last
+  end
 end
 
 # Dir["./spec/support/**/*.rb"].sort.each { |f| require f }

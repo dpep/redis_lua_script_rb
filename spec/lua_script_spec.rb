@@ -20,6 +20,21 @@ describe RedisLuaScript do
       ping
       expect(subject.loaded?(redis)).to be true
     end
+
+    context "when there is a legit script error" do
+      let(:script) { RedisLuaScript.new("return foo") }
+
+      it "raises an error" do
+        expect(redis).to receive(:eval).and_call_original
+        expect { script.eval(redis) }.to raise_error(Redis::CommandError, /Error running script/)
+      end
+
+      it "raises an error even when cached" do
+        script.load(redis)
+        expect(redis).not_to receive(:eval)
+        expect { script.eval(redis) }.to raise_error(Redis::CommandError, /Error running script/)
+      end
+    end
   end
 
   describe "#load" do
@@ -112,6 +127,12 @@ describe RedisLuaScript do
         expect(subject.eval(redis, [], [ 0 ])).to eq 123
         expect(subject.eval(redis, [], [ 999 ])).to eq 999
       end
+    end
+  end
+
+  describe Redis do
+    it "has not yet been altered" do
+      expect(defined?(RedisLuaScript::ImplicitRedis)).to be nil
     end
   end
 end

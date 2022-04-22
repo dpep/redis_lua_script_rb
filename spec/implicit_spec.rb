@@ -1,15 +1,16 @@
-require "redis_lua_script/implicit"
-
-describe RedisLuaScript do
-  before { redis.script(:flush) }
+describe RedisLuaScript, :run_last do
+  before do
+    require "redis_lua_script/implicit"
+    redis.script(:flush)
+  end
   after { subject }
 
   let(:redis) { Redis.new }
   let!(:script) { RedisLuaScript.new("return redis.call('PING')") }
 
-  describe Redis.ancestors do
+  describe Redis do
     it "prepends the Redis module" do
-      is_expected.to include(RedisLuaScript::ImplicitRedis)
+      expect(Redis.ancestors).to include(RedisLuaScript::ImplicitRedis)
     end
   end
 
