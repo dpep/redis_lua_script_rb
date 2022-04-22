@@ -1,4 +1,4 @@
-package_name = Dir.glob("*.gemspec")[0].split(".")[0]
+package_name = __FILE__.split(".")[0]
 require_relative "lib/#{package_name}"
 
 package = RedisLuaScript
