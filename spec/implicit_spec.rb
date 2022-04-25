@@ -40,6 +40,14 @@ describe RedisLuaScript, :run_last do
         expect(script).to receive(:sha).and_call_original
       end
     end
+
+    context "when args are passed in" do
+      subject { redis.eval("return { KEYS[1], ARGV[1] }", [ "key" ], [ 123 ]) }
+
+      it "returns the arg" do
+        is_expected.to eq [ "key", "123" ]
+      end
+    end
   end
 
   describe "RedisLuaScript#eval" do
