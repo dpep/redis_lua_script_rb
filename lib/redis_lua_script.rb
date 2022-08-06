@@ -6,7 +6,7 @@ class RedisLuaScript
   attr_reader :source
 
   def initialize(source)
-    @source = source.dup.freeze
+    @source = source.frozen? ? source : source.dup.freeze
   end
 
   def sha

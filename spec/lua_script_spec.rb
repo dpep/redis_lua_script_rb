@@ -1,5 +1,6 @@
 describe RedisLuaScript do
-  subject { RedisLuaScript.new("return redis.call('PING')") }
+  subject { RedisLuaScript.new(script) }
+  let(:script) { "return redis.call('PING')" }
 
   it { is_expected.to be_a RedisLuaScript }
 
@@ -64,6 +65,23 @@ describe RedisLuaScript do
       expect(subject.exists?(redis)).to be false
       subject.load(redis)
       expect(subject.exists?(redis)).to be true
+    end
+  end
+
+  describe "#source" do
+    subject { RedisLuaScript.new(script).source }
+
+    it "dups and freezes the script" do
+      is_expected.not_to be script
+      is_expected.to be_frozen
+    end
+
+    context "when script is already frozen" do
+      let(:script) { "return redis.call('PING')".freeze }
+
+      it "uses pre-frozen script" do
+        is_expected.to be script
+      end
     end
   end
 
