@@ -1,0 +1,25 @@
+version: "3.7"
+services:
+  rls:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: rls
+    tty: true
+    stdin_open: true
+    environment:
+      - REDIS=host.docker.internal
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - .:/data
+    entrypoint: entrypoint
+    #command: "bundle exec ruby spec/benchmark.rb"
+    command: /bin/sh
+
+  redis:
+    image: redis:6.0-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"

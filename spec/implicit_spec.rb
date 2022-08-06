@@ -5,7 +5,6 @@ describe RedisLuaScript, :run_last do
   end
   after { subject }
 
-  let(:redis) { Redis.new }
   let!(:script) { RedisLuaScript.new("return redis.call('PING')") }
 
   describe Redis do

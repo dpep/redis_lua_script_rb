@@ -1,10 +1,6 @@
 describe RedisLuaScript do
   subject { RedisLuaScript.new("return redis.call('PING')") }
 
-  before { redis.script(:flush) }
-
-  let(:redis) { Redis.new }
-
   it { is_expected.to be_a RedisLuaScript }
 
   describe "#eval" do
