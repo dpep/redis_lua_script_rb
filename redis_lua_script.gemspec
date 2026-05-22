@@ -1,13 +1,10 @@
-package_name = File.basename(__FILE__).split(".")[0]
-require File.expand_path("lib/#{package_name}/version", __dir__)
-
-package = RedisLuaScript
+require_relative "lib/redis_lua_script/version"
 
 Gem::Specification.new do |s|
-  s.name        = package_name
-  s.version     = package.const_get "VERSION"
+  s.name        = "redis_lua_script"
+  s.version     = RedisLuaScript::VERSION
   s.authors     = ["Daniel Pepper"]
-  s.summary     = package.to_s
+  s.summary     = "RedisLuaScript"
   s.description = "Redis Lua script optimization"
   s.homepage    = "https://github.com/dpep/redis_lua_script_rb"
   s.license     = "MIT"
