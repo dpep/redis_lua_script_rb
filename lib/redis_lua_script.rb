@@ -5,6 +5,11 @@ require "redis_lua_script/version"
 class RedisLuaScript
   attr_reader :source
 
+  # Redis's own cache-miss error; a script's error_reply can also contain "NOSCRIPT"
+  def self.noscript?(error)
+    error.message.start_with?("NOSCRIPT No matching script")
+  end
+
   def initialize(source)
     @source = source.frozen? ? source : source.dup.freeze
   end
@@ -16,7 +21,7 @@ class RedisLuaScript
   def eval(redis, *args)
     redis.evalsha(sha, *args)
   rescue Redis::CommandError => e
-    raise unless e.message.include?("NOSCRIPT")
+    raise unless RedisLuaScript.noscript?(e)
 
     # fall back to regular eval, which will trigger
     # script to be cached for next time

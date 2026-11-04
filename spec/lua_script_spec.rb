@@ -32,6 +32,20 @@ describe RedisLuaScript do
         expect { script.eval(redis) }.to raise_error(Redis::CommandError, /nonexistent global variable .foo./)
       end
     end
+
+    context "when the script's own error mentions NOSCRIPT" do
+      let(:script) do
+        RedisLuaScript.new(%q{redis.call("INCR", KEYS[1]) return redis.error_reply("NOSCRIPT fake")})
+      end
+
+      before { redis.del("counter") }
+
+      it "does not run the script again" do
+        script.load(redis)
+        expect { script.eval(redis, ["counter"]) }.to raise_error(Redis::CommandError, /NOSCRIPT fake/)
+        expect(redis.get("counter")).to eq "1"
+      end
+    end
   end
 
   describe "#load" do

@@ -7,7 +7,7 @@ class RedisLuaScript
 
       evalsha(rls.sha, *args)
     rescue Redis::CommandError => e
-      raise unless e.message.include?("NOSCRIPT")
+      raise unless RedisLuaScript.noscript?(e)
 
       # fall back to regular eval, which will trigger
       # script to be cached for next time
