@@ -10,14 +10,15 @@ Gem::Specification.new do |s|
   s.license     = "MIT"
 
   s.files       = Dir.glob("lib/**/*")
-  s.test_files  = Dir.glob("spec/**/*_spec.rb")
+
+  s.required_ruby_version = ">= 3.2"
 
   s.add_dependency "redis"
 
   s.add_development_dependency "benchmark-ips"
-  s.add_development_dependency "byebug"
-  s.add_development_dependency "codecov"
+  s.add_development_dependency "debug"
   s.add_development_dependency "redis-namespace"
   s.add_development_dependency "rspec"
+  s.add_development_dependency "rspec-debugging"
   s.add_development_dependency "simplecov"
 end

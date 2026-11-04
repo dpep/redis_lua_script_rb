@@ -1,15 +1,16 @@
-require "byebug"
+require "debug"
 require "redis-namespace"
 require "rspec"
+require "rspec/debugging"
 require "simplecov"
 
 SimpleCov.start do
-  add_filter /spec/
+  add_filter "/spec/"
 end
 
 if ENV["CI"] == "true" || ENV["CODECOV_TOKEN"]
-  require "codecov"
-  SimpleCov.formatter = SimpleCov::Formatter::Codecov
+  require "simplecov_json_formatter"
+  SimpleCov.formatter = SimpleCov::Formatter::JSONFormatter
 end
 
 # load this gem
