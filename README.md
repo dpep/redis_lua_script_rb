@@ -3,10 +3,10 @@ RedisLuaScript
 ![Gem](https://img.shields.io/gem/dt/redis_lua_script?style=plastic)
 [![codecov](https://codecov.io/gh/dpep/redis_lua_script_rb/branch/main/graph/badge.svg)](https://codecov.io/gh/dpep/redis_lua_script_rb)
 
-Run Redis Lua scripts with [EVALSHA](https://redis.io/commands/EVALSHA), so each call sends a 40 character SHA instead of the whole script, falling back to EVAL the first time a server hasn't seen it.
+Run Redis Lua scripts with [EVALSHA](https://redis.io/commands/EVALSHA): each call sends the script's 40-character SHA instead of the whole script, and falls back to EVAL when the server doesn't have it cached.
 
 ### When to use it
-The win comes from not resending the script, so it scales with script size and shrinks as bandwidth grows. Per-call time from `script/benchmark` with +1 ms latency:
+The savings come from not resending the script, so they grow with script size and shrink as bandwidth grows. Per-call time from `script/benchmark` with +1 ms latency:
 
 | script size | ~lines | 100 Mbit/s EVAL → EVALSHA | 1 Gbit/s EVAL → EVALSHA |
 |---|---|---|---|
@@ -14,7 +14,7 @@ The win comes from not resending the script, so it scales with script size and s
 | 10 KB | ~250 | 2.31 → 1.37 ms | 1.56 → 1.39 ms |
 | 100 KB | ~2,500 | 10.3 → 1.44 ms | 2.99 → 1.44 ms |
 
-Most Redis scripts (locks, rate limiters, queue operations) are a few dozen lines, around 1–2 KB, where this saves next to nothing: plain `redis.eval` is simpler. Reach for it when scripts run to hundreds of lines, the link is slow or metered, or call volume is high enough that the bytes add up.
+Most Redis scripts (locks, rate limiters, queue operations) are a few dozen lines, around 1–2 KB. At that size this saves next to nothing, and plain `redis.eval` is simpler. Reach for it when scripts run to hundreds of lines, the link is slow or metered, or call volume is high enough that the bytes add up.
 
 ----
 ### Usage
@@ -27,10 +27,12 @@ script = RedisLuaScript.new("return redis.call('PING')")
 script.eval(redis)
 ```
 
+Extra arguments pass straight through to redis-rb, so `script.eval(redis, keys: [...], argv: [...])` works like `redis.eval`. To skip the first-call miss, preload with `script.load(redis)`.
+
 
 ----
 ### Implicit Mode
-Use Redis per usual, with optimizations implicitly performed on script evaluations.
+Requiring `redis_lua_script/implicit` patches `Redis#eval` globally, so every `redis.eval` in the process goes through EVALSHA with no other code changes.
 
 ```ruby
 require "redis_lua_script/implicit"
@@ -42,7 +44,7 @@ redis.eval("return redis.call('PING')")
 
 ----
 ### Benchmarking
-`script/benchmark` compares EVAL with EVALSHA across script sizes, through [Toxiproxy](https://github.com/Shopify/toxiproxy) to throttle bandwidth and add latency, since localhost hides what bytes on the wire cost.
+`script/benchmark` compares EVAL with EVALSHA across script sizes. It runs through [Toxiproxy](https://github.com/Shopify/toxiproxy) to throttle bandwidth and add latency, since localhost hides what bytes on the wire cost. It expects `redis-server` on port 6379.
 
 ```sh
 brew install toxiproxy
@@ -56,7 +58,7 @@ script/benchmark --sizes 500,5000 --direct       # loopback, no proxy
 ----
 ## Contributing
 
-Yes please  :)
+Yes please :)
 
 1. Fork it
 1. Create your feature branch (`git checkout -b my-feature`)
