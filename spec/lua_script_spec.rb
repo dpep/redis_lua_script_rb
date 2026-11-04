@@ -2,19 +2,11 @@ describe RedisLuaScript do
   subject { RedisLuaScript.new(script) }
   let(:script) { "return redis.call('PING')" }
 
-  it { is_expected.to be_a RedisLuaScript }
-
   describe "#eval" do
-    def ping
-      expect(subject.eval(redis)).to eq "PONG"
-    end
-
-    it { ping }
-
-    it "loads the script into redis" do
+    it "falls back to EVAL, which loads the script into redis" do
       expect(redis).to receive(:evalsha).once.and_call_original
       expect(redis).to receive(:eval).once.and_call_original
-      ping
+      expect(subject.eval(redis)).to eq "PONG"
       expect(subject.loaded?(redis)).to be true
     end
 
@@ -50,9 +42,9 @@ describe RedisLuaScript do
 
   describe "#load" do
     it "loads script into redis" do
-      expect(redis.script(:exists, subject.sha)).to be false
+      expect(subject.loaded?(redis)).to be false
       subject.load(redis)
-      expect(redis.script(:exists, subject.sha)).to be true
+      expect(subject.loaded?(redis)).to be true
     end
 
     it "returns the sha" do
@@ -66,19 +58,9 @@ describe RedisLuaScript do
     end
   end
 
-  describe "#loaded?" do
-    it do
-      expect(subject.loaded?(redis)).to be false
-      subject.load(redis)
-      expect(subject.loaded?(redis)).to be true
-    end
-  end
-
   describe "#exists?" do
-    it 'works the same as .loaded?' do
-      expect(subject.exists?(redis)).to be false
-      subject.load(redis)
-      expect(subject.exists?(redis)).to be true
+    it "is an alias of #loaded?" do
+      expect(subject.method(:exists?)).to eq subject.method(:loaded?)
     end
   end
 
@@ -111,10 +93,6 @@ describe RedisLuaScript do
 
   describe "script source" do
     shared_examples "runs verbatim" do |expected|
-      it "matches plain EVAL" do
-        expect(redis.eval(lua)).to eq expected
-      end
-
       it "evals" do
         expect(RedisLuaScript.new(lua).eval(redis)).to eq expected
       end

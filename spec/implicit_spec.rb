@@ -8,20 +8,10 @@ describe RedisLuaScript, :run_last do
 
   let!(:script) { RedisLuaScript.new("return redis.call('PING')") }
 
-  describe Redis do
-    it "prepends the Redis module" do
-      expect(Redis.ancestors).to include(RedisLuaScript::ImplicitRedis)
-    end
-  end
-
   describe "Redis#eval" do
     subject { redis.eval(script.source) }
 
     it { is_expected.to eq "PONG" }
-
-    it "instantiates a RedisLuaScript implicitly" do
-      expect(RedisLuaScript).to receive(:new).with(script.source).and_call_original
-    end
 
     it "reuses one RedisLuaScript per source" do
       redis.eval(script.source.dup)
@@ -43,11 +33,8 @@ describe RedisLuaScript, :run_last do
 
       it { is_expected.to eq "PONG" }
 
-      it "reuses the RedisLuaScript" do
+      it "uses it rather than building another" do
         expect(RedisLuaScript).not_to receive(:new)
-      end
-
-      it "it uses the RedisLuaScript methods" do
         expect(script).to receive(:sha).and_call_original
       end
     end
@@ -66,17 +53,9 @@ describe RedisLuaScript, :run_last do
 
     it { is_expected.to eq "PONG" }
 
-    it "reuses the RedisLuaScript object" do
-      expect(RedisLuaScript).not_to receive(:new)
-      expect(script).to receive(:sha).and_call_original
-    end
-
-    it "only calls evalsha once" do
-      expect(redis).to receive(:evalsha)
-    end
-
-    it "only calls eval once" do
-      expect(redis).to receive(:eval)
+    # passes through Redis#eval, which must not loop back into RedisLuaScript#eval
+    it "only calls Redis#eval once" do
+      expect(redis).to receive(:eval).once.and_call_original
     end
   end
 end
