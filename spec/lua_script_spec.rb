@@ -23,13 +23,13 @@ describe RedisLuaScript do
 
       it "raises an error" do
         expect(redis).to receive(:eval).and_call_original
-        expect { script.eval(redis) }.to raise_error(Redis::CommandError, /Error running script/)
+        expect { script.eval(redis) }.to raise_error(Redis::CommandError, /nonexistent global variable .foo./)
       end
 
       it "raises an error even when cached" do
         script.load(redis)
         expect(redis).not_to receive(:eval)
-        expect { script.eval(redis) }.to raise_error(Redis::CommandError, /Error running script/)
+        expect { script.eval(redis) }.to raise_error(Redis::CommandError, /nonexistent global variable .foo./)
       end
     end
   end
