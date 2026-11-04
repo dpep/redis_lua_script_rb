@@ -2,8 +2,20 @@ require "redis_lua_script"
 
 class RedisLuaScript
   module ImplicitRedis
+    # reuse one RedisLuaScript per source, so the SHA isn't recomputed each call
+    SCRIPTS = {}
+    # bounds memory when scripts are generated dynamically
+    MAX_SCRIPTS = 1_000
+
+    def self.script_for(source)
+      SCRIPTS.fetch(source) do
+        SCRIPTS.clear if SCRIPTS.size >= MAX_SCRIPTS
+        SCRIPTS[source] = RedisLuaScript.new(source)
+      end
+    end
+
     def eval(script, *args)
-      rls = script.is_a?(RedisLuaScript) ? script : RedisLuaScript.new(script)
+      rls = script.is_a?(RedisLuaScript) ? script : ImplicitRedis.script_for(script)
 
       evalsha(rls.sha, *args)
     rescue Redis::CommandError => e
@@ -11,7 +23,7 @@ class RedisLuaScript
 
       # fall back to regular eval, which will trigger
       # script to be cached for next time
-      super(rls.send(:minify), *args)
+      super(rls.source, *args)
     end
   end
 
