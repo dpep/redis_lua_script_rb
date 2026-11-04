@@ -67,6 +67,7 @@ GEM
       rspec-support (~> 3.13.0)
     rspec-support (3.13.7)
     simplecov (1.3.2)
+    toxiproxy (2.0.2)
     tsort (0.2.0)
 
 PLATFORMS
@@ -88,6 +89,7 @@ DEPENDENCIES
   rspec
   rspec-debugging
   simplecov
+  toxiproxy
 
 CHECKSUMS
   benchmark-ips (2.15.1) sha256=07a1a9f3c6105ecaf68c174fc3fbcddd71a0e9ada6236ae03093a0dcfd812d59
@@ -123,6 +125,7 @@ CHECKSUMS
   rspec-mocks (3.13.8) sha256=086ad3d3d17533f4237643de0b5c42f04b66348c28bf6b9c2d3f4a3b01af1d47
   rspec-support (3.13.7) sha256=0640e5570872aafefd79867901deeeeb40b0c9875a36b983d85f54fb7381c47c
   simplecov (1.3.2) sha256=2a22ec1759f1b8db60881a2e038758956fc69ef93ed669be0bde0678de6d0e85
+  toxiproxy (2.0.2) sha256=2e3b53604fb921d40da3db8f78a52b3133fcae33e93d440725335b15974e440a
   tsort (0.2.0) sha256=9650a793f6859a43b6641671278f79cfead60ac714148aabe4e3f0060480089f
 
 BUNDLED WITH

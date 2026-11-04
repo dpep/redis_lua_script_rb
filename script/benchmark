@@ -1,0 +1,66 @@
+#!/usr/bin/env ruby
+# Compare EVAL with EVALSHA (via RedisLuaScript) across script sizes, over a
+# Toxiproxy link so bytes on the wire cost what they would on a real network.
+#
+# Needs redis-server on :6379 and toxiproxy-server on :8474
+# (`toxiproxy-server &`, or `brew services start toxiproxy`).
+#
+#   script/benchmark                          # 1 Gbit/s, +1 ms
+#   script/benchmark --bandwidth 100 --latency 1
+#   script/benchmark --direct                 # loopback, no proxy
+
+require "bundler/setup"
+require "benchmark/ips"
+require "optparse"
+require "redis"
+require "toxiproxy"
+require_relative "../lib/redis_lua_script/implicit"
+
+opts = { sizes: [100, 1_000, 10_000, 100_000], bandwidth: 1_000, latency: 1, time: 2, direct: false }
+OptionParser.new do |o|
+  o.on("--sizes LIST", Array, "script sizes in bytes (default: #{opts[:sizes].join(",")})") { |v| opts[:sizes] = v.map { Integer(_1) } }
+  o.on("--bandwidth MBIT", Float, "client->server bandwidth in Mbit/s (default: #{opts[:bandwidth]})") { opts[:bandwidth] = _1 }
+  o.on("--latency MS", Integer, "added latency per response in ms (default: #{opts[:latency]})") { opts[:latency] = _1 }
+  o.on("--time SECONDS", Float, "measuring time per report (default: #{opts[:time]})") { opts[:time] = _1 }
+  o.on("--direct", "connect straight to Redis, skipping the proxy") { opts[:direct] = true }
+end.parse!
+
+def lua_of_size(bytes)
+  line = "x = x + 1 -- pad\n"
+  "local x = 0\n" + line * [(bytes - 21) / line.bytesize, 0].max + "return x\n"
+end
+
+def run(redis, sizes, time)
+  sizes.each do |size|
+    source = lua_of_size(size)
+    script = RedisLuaScript.new(source)
+    script.load(redis)
+
+    puts "\n== #{source.bytesize} byte script"
+    Benchmark.ips(time:, warmup: 1) do |x|
+      # Redis#call bypasses the implicit Redis#eval patch, so this is plain EVAL
+      x.report("EVAL") { redis.call("EVAL", source, 0) }
+      x.report("RedisLuaScript#eval") { script.eval(redis) }
+      x.report("implicit Redis#eval") { redis.eval(source) }
+      x.compare!
+    end
+  end
+end
+
+if opts[:direct]
+  puts "direct to localhost:6379"
+  run(Redis.new, opts[:sizes], opts[:time])
+  exit
+end
+
+begin
+  Toxiproxy.populate([{ name: "redis_bench", listen: "127.0.0.1:26379", upstream: "127.0.0.1:6379" }])
+rescue Errno::ECONNREFUSED
+  abort "toxiproxy-server isn't running: start it with `toxiproxy-server &`"
+end
+
+puts "via toxiproxy: #{opts[:bandwidth]} Mbit/s up, +#{opts[:latency]} ms per response"
+Toxiproxy[:redis_bench]
+  .upstream(:bandwidth, rate: (opts[:bandwidth] * 125).round) # KB/s
+  .downstream(:latency, latency: opts[:latency])
+  .apply { run(Redis.new(port: 26379), opts[:sizes], opts[:time]) }
