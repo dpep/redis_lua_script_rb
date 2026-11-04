@@ -103,33 +103,49 @@ describe RedisLuaScript do
     it { expect(subject.to_s).to be subject.source }
   end
 
-  describe "#minify" do
-    subject { RedisLuaScript.new(lua) }
+  describe "#sha" do
+    it "matches the SHA Redis computes" do
+      expect(subject.sha).to eq redis.script(:load, script)
+    end
+  end
 
-    shared_examples "minified lua" do
-      it do
-        expect(subject.send(:minify)).to eq expected
+  describe "script source" do
+    shared_examples "runs verbatim" do |expected|
+      it "matches plain EVAL" do
+        expect(redis.eval(lua)).to eq expected
+      end
+
+      it "evals" do
+        expect(RedisLuaScript.new(lua).eval(redis)).to eq expected
+      end
+
+      it "evals once cached" do
+        RedisLuaScript.new(lua).load(redis)
+        expect(RedisLuaScript.new(lua).eval(redis)).to eq expected
       end
     end
 
-    context do
-      let(:lua) do <<-LUA
-          -- this comment gets removed
-          return redis.call('PING')  -- this one too
-        LUA
-      end
+    context "with -- inside a string" do
+      let(:lua) { %q{return "a--b"} }
 
-      let(:expected) { "return redis.call('PING')" }
-
-      it_behaves_like "minified lua"
-
-      it "executes properly" do
-        expect(subject.eval(redis)).to eq "PONG"
-      end
+      it_behaves_like "runs verbatim", "a--b"
     end
 
-    context "with if statement" do
-      let(:lua) do <<~LUA
+    context "with a block comment" do
+      let(:lua) { "--[[ multi\nline comment ]]\nreturn 1" }
+
+      it_behaves_like "runs verbatim", 1
+    end
+
+    context "with an indented long string" do
+      let(:lua) { "return [[\n  indented\n\n  text]]" }
+
+      it_behaves_like "runs verbatim", "  indented\n\n  text"
+    end
+
+    context "with args" do
+      let(:script) do <<~LUA
+          -- comments are kept
           local val = tonumber(ARGV[1])
           if val > 123 then
             return val
@@ -138,18 +154,6 @@ describe RedisLuaScript do
           return 123
         LUA
       end
-
-      let(:expected) do
-        [
-          "local val = tonumber(ARGV[1])",
-          "if val > 123 then",
-          "return val",
-          "end",
-          "return 123",
-        ].join "\n"
-      end
-
-      it_behaves_like "minified lua"
 
       it "executes properly" do
         expect(subject.eval(redis, [], [ 0 ])).to eq 123

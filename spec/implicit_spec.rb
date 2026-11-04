@@ -1,6 +1,7 @@
 describe RedisLuaScript, :run_last do
   before do
     require "redis_lua_script/implicit"
+    RedisLuaScript::ImplicitRedis::SCRIPTS.clear
     redis.script(:flush)
   end
   after { subject }
@@ -20,6 +21,17 @@ describe RedisLuaScript, :run_last do
 
     it "instantiates a RedisLuaScript implicitly" do
       expect(RedisLuaScript).to receive(:new).with(script.source).and_call_original
+    end
+
+    it "reuses one RedisLuaScript per source" do
+      redis.eval(script.source.dup)
+      expect(RedisLuaScript).not_to receive(:new)
+    end
+
+    it "bounds the number of cached scripts" do
+      stub_const("RedisLuaScript::ImplicitRedis::MAX_SCRIPTS", 2)
+      3.times { |i| redis.eval("return #{i}") }
+      expect(RedisLuaScript::ImplicitRedis::SCRIPTS.size).to be <= 2
     end
 
     it "calls evalsha implicitly" do

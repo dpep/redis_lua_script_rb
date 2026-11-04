@@ -15,7 +15,7 @@ class RedisLuaScript
   end
 
   def sha
-    @sha ||= Digest::SHA1.hexdigest(minify).freeze
+    @sha ||= Digest::SHA1.hexdigest(source).freeze
   end
 
   def eval(redis, *args)
@@ -25,11 +25,11 @@ class RedisLuaScript
 
     # fall back to regular eval, which will trigger
     # script to be cached for next time
-    redis.eval(minify, *args)
+    redis.eval(source, *args)
   end
 
   def load(redis)
-    unwrap_redis(redis).script(:load, minify).tap do |sha|
+    unwrap_redis(redis).script(:load, source).tap do |sha|
       unless sha == self.sha
         raise "unexpected script SHA: expected #{self.sha}, got #{sha}"
       end
@@ -46,12 +46,6 @@ class RedisLuaScript
   end
 
   private
-
-  def minify
-    # trim comments (whole line and partial)
-    # and whitespace (prefix and empty lines)
-    @minify ||= source.gsub(/^\s*--.*\n|\s*--.*|^\s*|^$\n/, "").chomp.freeze
-  end
 
   # Redis::Namespace deprecated script commands, so use raw redis connection
   def unwrap_redis(redis)
